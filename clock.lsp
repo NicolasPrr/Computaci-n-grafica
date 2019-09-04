@@ -8,8 +8,8 @@
 
     ;longitud de las lineas
     (setq second_lenght (* radios 0.6))
-    (setq minut_lenght  (* radios 0.7))
-    (setq hour_lenght   (* radios 0.4))
+    (setq minut_lenght  (* radios 0.9))
+    (setq hour_lenght   (* radios 0.5))
     
     ;;p p1 second is the center
     (setq p2_second (sum_point center 0 second_lenght))
@@ -17,8 +17,8 @@
     (setq p2_hour (sum_point center 0 hour_lenght))
 
     (setq increment_second -6 )
-    (setq increment_minut (/ -1 10)  )
-    (setq increment_hour  (/ -1 120)  )
+    (setq increment_minut (/ -1 10.0)  )
+    (setq increment_hour  (/ -1 120.0)  )
 
 )
 (defun set_date ( ) 
@@ -40,31 +40,31 @@
   p2
 )
 (defun init_lines ( )
-  ;Init lines
-
-    (command "._line" center p2_hour  "" ) 
-    (setq line_hour (entlast)) 
-    
-    (command "._line" center p2_minut "" ) 
-    (setq line_minut (entlast)) 
-    
-    (command "._line" center p2_second "" )
-    (setq line_second (entlast)) 
-
     (set_date)
     (set_hour)
     (set_minut)
     (set_second)
+  ;Init lines
+
+    (command "._line" center p2_hour  "" ) 
+    (setq line_hour (entlast)) 
+    (command "rotate" line_hour    ""  center   (+ (* -30 hour)  (/ (atof minut) -2.0)  (/ (atof second) -120.0) ) )
+    (command "change" line_hour ""   "properties" "color" 1 "") ;rojo
+    
+    (command "._line" center p2_minut "" ) 
+    (setq line_minut (entlast)) 
+    (command "rotate" line_minut   ""  center   ( +  (* -6 (atof  minut)) (/ (atof second) -10.0))) ;; 6*minuts + seconds/10
+    (command "change" line_minut ""  "properties" "color" 2 "") ;amarillo
+    
+    (command "._line" center p2_second "" )
+    (setq line_second (entlast)) 
+    (command "rotate" line_second  ""  center   (* -6 (atof  second)) )
+    (command "change" line_second "" "properties" "color" 3 "") ;verde
+
 
     ;atof parse to integer
 ;init rotations 
-    (command "rotate" line_hour    ""  center   (+ (* -30 hour)  (/ (atof minut) -2)  (/ (atof second) -120) ) )
-    (command "rotate" line_minut   ""  center   ( +  (* -6 (atof  minut)) (/ (atof second) -10))) ;; 6*minuts + seconds/10
-    (command "rotate" line_second  ""  center   (* -6 (atof  second)) )
 ;init colors
-    (command "change" line_hour ""   "properties" "color" 1 "") ;rojo
-    (command "change" line_minut ""  "properties" "color" 2 "") ;amarillo
-    (command "change" line_second "" "properties" "color" 3 "") ;verde
 
 )
 (defun update_lines ( )
@@ -76,11 +76,15 @@
 (defun c:do_clock ( )
   (init_var)
   (command "circle" center radios )
-  (setq acd (vlax-get-acad-object))
   (init_lines)
+  (setq acd (vlax-get-acad-object))
   (while
-    (command "delay" 1000 )
+    (set_date)
+    (set_second)
+    ( print (strcat "\n Seconds: " second))
     (update_lines)
+    (print "Holi")
+    (command "_.delay" 1000 )
     (vla-update acd)   
   )   
 )
