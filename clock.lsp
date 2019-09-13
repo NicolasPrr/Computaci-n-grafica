@@ -47,6 +47,7 @@
     (setq i 0)
     (setq times 120)
 
+    ;Cantidad de dias por mes
     (setq days_of_month (list  0 31 28 31 30 31 30 31 31 30 31 30 31))
 
 )
@@ -139,8 +140,12 @@
     (command "insert" "hand1" center "0.5" "1" (+ (* -30 (rem hour 12))  (/ minut -2.0)  (/  second -120.0) 90)  )
     (setq line_hour_properties   (entget (entlast)))
 
+
+    ;Inicializacion de los textos de fecha y hora, se le asigna el respectivo tamaño con la fecha del sistema actual
     (command "_text" (sum_point center (- 0 radios 150) (+ radios (* radios 0.3) ) )  (* radios 0.17)  "0" (get_str_date) "")
+    ;Asignacion a una variable las propiedades del texto para posteriormente poder ser modificada.
     (setq text_date ( entget (entlast)))
+
     (command "_text" (sum_point center 200  (+ radios (* radios 0.3) ) )  (* radios 0.17)  "0" (get_str_hms) "")
     (setq text_hour ( entget (entlast) ))
 
@@ -150,15 +155,19 @@
 
 )
 
+
 (defun get_str_date ( )
+  ;La funcion retora la fecha con formato especial
   (setq date_string (strcat (itoa year) "-"  (format_to_text month) "-" (format_to_text day)  )  )
   date_string
 )
 (defun get_str_hms ( )
+  ;Retorna la hora con formato especial
   (setq date_string (strcat (format_to_text hour) ":"  (format_to_text minut) ":" (format_to_text second) )  )
   date_string
 )
 (defun format_to_text ( x )
+  ; Se concatenta la entrada  con un 0 en caso de que el numero como el mes, dia o incluso  segundos  sea de un solo digito
   (if (< x  10)
      (strcat "0" (itoa x))
      (itoa x)
@@ -192,7 +201,12 @@
   (setq line_hour_properties (subst (cons 50  newtime) (assoc 50  line_hour_properties) line_hour_properties ))
   (entmod line_hour_properties)
   
+
+  ; Actualizacion de la variable del segundo, desencadenada una cadena de acciones como la actualizacion
+  ; del minuto, hora, entre otros
   (update_second)
+
+  ;Actualizacion del texto de la hora y de la fecha
   (setq text_hour (subst (cons 1  (get_str_hms)) (assoc 1  text_hour) text_hour))
   (entmod text_hour)
   (setq text_date (subst (cons 1  (get_str_date)) (assoc 1  text_date) text_date))
