@@ -45,24 +45,39 @@
     ;Inicializacion de las variables
     ;Cuantas veces y desde cuando
     (setq i 0)
-    (setq times 20)
+    (setq times 120)
+
+    (setq days_of_month (list  0 31 28 31 30 31 30 31 31 30 31 30 31))
 
 )
 (defun set_date ( ) 
     ;Obtiene la hora respectiva y la pone el cdate_val
     (setq cdate_val (rtos (getvar "CDATE") 2 6))
 )
+(defun set_year ( )
+  ;Obtiene el año sacado de cdate_val y la asigna a year
+  (setq year  (atoi (substr cdate_val 1 4 )) )
+)
+(defun set_month ( )
+  ;Obtiene el mes  sacado de cdate_val y la asigna a month
+  (setq month  (atoi (substr cdate_val 5 2 )) )
+)
+(defun set_day ( )
+  ;Obtiene el mes  sacado de cdate_val y la asigna a month
+  (setq day  (atoi (substr cdate_val 7 2 )) )
+)
 (defun set_hour ( )
   ;Obtiene la hora sacada de cdate_val y la asigna a hour
-  (setq hour ( rem   (atof (substr cdate_val 10 2 )) 12) )
+  ;; (setq hour ( rem   (atoi (substr cdate_val 10 2 )) 12) )
+  (setq hour (atoi (substr cdate_val 10 2 )))
 )
 (defun set_minut ( )
   ;Asignacion del minuto segun cdate_val
-  (setq minut (substr cdate_val 12 2))
+  (setq minut (atoi (substr cdate_val 12 2)))
 )
 (defun set_second ( )
   ;Asignacion del segundo actual segun cdate_val
-  (setq second (substr cdate_val 14 2))
+  (setq second (atoi (substr cdate_val 14 2)))
 )
 (defun sum_point (p1 x y)
   ;Funcion para  sumar un punto p1 con X y Y, retorna un nuevo punto p2.
@@ -106,23 +121,48 @@
     (set_second)
     (set_minut)
     (set_hour)
+    (set_day)
+    (set_month)
+    (set_year)
+    (get_str_date)
     
     
     ;Se inserta el bloque respectivo del segundero en la posicion respectiva
-    (command "insert" "hand1" center "1" "1"   ( + (* -6 (atof  second)) 90 ))
+    (command "insert" "hand1" center "1" "1"   ( + (* -6   second) 90 ))
     (setq line_second_properties (entget (entlast))) 
 
     ;Se inserta el bloque respectivo del minutero en la posicion respectiva
-    (command "insert" "hand1" center "0.8" "1" ( +  (* -6 (atof  minut)) (/ (atof second) -10.0)  90  ))
+    (command "insert" "hand1" center "0.8" "1" ( +  (* -6   minut) (/  second -10.0)  90  ))
     (setq line_minut_properties  (entget (entlast))) 
 
     ;Se inserta el bloque respectivo del horario en la posicion respectiva
-    (command "insert" "hand1" center "0.5" "1" (+ (* -30 hour)  (/ (atof minut) -2.0)  (/ (atof second) -120.0) 90)  )
+    (command "insert" "hand1" center "0.5" "1" (+ (* -30 (rem hour 12))  (/ minut -2.0)  (/  second -120.0) 90)  )
     (setq line_hour_properties   (entget (entlast)))
+
+    (command "_text" (sum_point center (- 0 radios 150) (+ radios (* radios 0.3) ) )  (* radios 0.17)  "0" (get_str_date) "")
+    (setq text_date ( entget (entlast)))
+    (command "_text" (sum_point center 200  (+ radios (* radios 0.3) ) )  (* radios 0.17)  "0" (get_str_hms) "")
+    (setq text_hour ( entget (entlast) ))
+
 
 
 ;atof parse to integer, float
 
+)
+
+(defun get_str_date ( )
+  (setq date_string (strcat (itoa year) "-"  (format_to_text month) "-" (format_to_text day)  )  )
+  date_string
+)
+(defun get_str_hms ( )
+  (setq date_string (strcat (format_to_text hour) ":"  (format_to_text minut) ":" (format_to_text second) )  )
+  date_string
+)
+(defun format_to_text ( x )
+  (if (< x  10)
+     (strcat "0" (itoa x))
+     (itoa x)
+  )
 )
 (defun update_lines ( )
 
@@ -151,10 +191,70 @@
   (setq newtime  ( - (cdr (nth 14 line_hour_properties)) increment_hour  ))
   (setq line_hour_properties (subst (cons 50  newtime) (assoc 50  line_hour_properties) line_hour_properties ))
   (entmod line_hour_properties)
- 
-
+  
+  (update_second)
+  (setq text_hour (subst (cons 1  (get_str_hms)) (assoc 1  text_hour) text_hour))
+  (entmod text_hour)
+  (setq text_date (subst (cons 1  (get_str_date)) (assoc 1  text_date) text_date))
+  (entmod text_date)
 )
-
+(defun update_second ( )
+  (if  (= (+ second 1 ) 60 )
+      (progn
+        (setq second 0 )  
+        (update_minut)
+      )
+      (progn
+        (setq second  (+ second  1) )
+      )
+  )
+)
+(defun update_minut ( )
+  (if  (= (+ minut  1 ) 60 )
+      (progn
+        (setq minut 0 )  
+      )
+      (progn
+        (setq minut  (+ minut  1) )
+      )
+  )
+)
+(defun update_hour ( )
+  (if  (= (+ hour  1 ) 24 )
+      (progn
+        (setq hour 0 )  
+        (update_month)
+      )
+      (progn
+        (setq hour  (+ hour  1) )
+      )
+  )
+)
+(defun update_day ( )
+  (if  (= (+ day  1 ) (nth month  days_of_month) )
+      (progn
+        (setq day 1 )  
+        (update_month)
+      )
+      (progn
+        (setq day  (+ day  1) )
+      )
+  )
+)
+(defun update_month ( )
+  (if  (= (+ month  1 ) 12)
+      (progn
+        (setq month 1 )  
+        (update_year)
+      )
+      (progn
+        (setq month  (+ month  1) )
+      )
+  )
+)
+(defun update_year ( )
+  (setq year  (+ year  1) )
+)
 (defun draw_circles ( )
   ;Dibuja las circulos segun el radio dado anteriormente
   
@@ -173,7 +273,9 @@
   (draw_circles) ;Dibujar circulos
   (init_reference_lines) ;Dibujar lineas de referencias
   (setq acd (vlax-get-acad-object))
+  
   (init_lines) ;Inicializar las lineas, es decir que importa los bloques respectivos
+  ;; (init_text)
   (while (< i times)
      (print "")
      (update_lines)
