@@ -9,7 +9,7 @@
   ;             el contador inicial del while
   ; set_date:   Obtiene el tiempo del sistema y la asigna a cdate_val
   ; set_hour:   Obtiene la hora segun el tiempo del sistema la asigna a la variable hour
-  ; set_minut : Obtiene los minutos segun el tiempo del sistema la asigna a la variable minut
+  ; set_minute : Obtiene los minutos segun el tiempo del sistema la asigna a la variable minute
   ; set_second: Obtiene los segundos segun el tiempo del sistema la asigna a la variable second
   ; sum_point(p1, x y): 
   ;             Suma las coordenadas X,Y  a un punto dado p1
@@ -30,16 +30,13 @@
     ;car  => x
     ;cadr => y
 
-    ;Sacamos los valores X y Y para los respectivos calculos
-    (setq y_center (cadr center))
-    (setq x_center (car center))
-
+    
     ;Asignacion del radio para poder calcular las referencias (poli lineas)
     (setq radios 1000)
 
     ;Incrementos por segundo dependiendo si es el segundero, horario y minutero
     (setq increment_second (/ pi 30.0) )
-    (setq increment_minut (/ pi 1800.0)  )
+    (setq increment_minute (/ pi 1800.0)  )
     (setq increment_hour  (/ pi 21600.0)  )
 
     ;Inicializacion de las variables
@@ -72,9 +69,9 @@
   ;; (setq hour ( rem   (atoi (substr cdate_val 10 2 )) 12) )
   (setq hour (atoi (substr cdate_val 10 2 )))
 )
-(defun set_minut ( )
+(defun set_minute ( )
   ;Asignacion del minuto segun cdate_val
-  (setq minut (atoi (substr cdate_val 12 2)))
+  (setq minute (atoi (substr cdate_val 12 2)))
 )
 (defun set_second ( )
   ;Asignacion del segundo actual segun cdate_val
@@ -120,7 +117,7 @@
     ;Asignacion de hora, segundos y minutos  
     (set_date)
     (set_second)
-    (set_minut)
+    (set_minute)
     (set_hour)
     (set_day)
     (set_month)
@@ -133,11 +130,11 @@
     (setq line_second_properties (entget (entlast))) 
 
     ;Se inserta el bloque respectivo del minutero en la posicion respectiva
-    (command "insert" "hand1" center "0.8" "1" ( +  (* -6   minut) (/  second -10.0)  90  ))
-    (setq line_minut_properties  (entget (entlast))) 
+    (command "insert" "hand1" center "0.8" "1" ( +  (* -6   minute) (/  second -10.0)  90  ))
+    (setq line_minute_properties  (entget (entlast))) 
 
     ;Se inserta el bloque respectivo del horario en la posicion respectiva
-    (command "insert" "hand1" center "0.5" "1" (+ (* -30 (rem hour 12))  (/ minut -2.0)  (/  second -120.0) 90)  )
+    (command "insert" "hand1" center "0.5" "1" (+ (* -30 (rem hour 12))  (/ minute -2.0)  (/  second -120.0) 90)  )
     (setq line_hour_properties   (entget (entlast)))
 
 
@@ -163,7 +160,7 @@
 )
 (defun get_str_hms ( )
   ;Retorna la hora con formato especial
-  (setq date_string (strcat (format_to_text hour) ":"  (format_to_text minut) ":" (format_to_text second) )  )
+  (setq date_string (strcat (format_to_text hour) ":"  (format_to_text minute) ":" (format_to_text second) )  )
   date_string
 )
 (defun format_to_text ( x )
@@ -192,9 +189,9 @@
   (entmod line_second_properties)
   
   ;; Minutos ***********
-  (setq newtime  ( - (cdr (nth 14 line_minut_properties)) increment_minut  ))
-  (setq line_minut_properties (subst (cons 50  newtime) (assoc 50  line_minut_properties) line_minut_properties ))
-  (entmod line_minut_properties)
+  (setq newtime  ( - (cdr (nth 14 line_minute_properties)) increment_minute  ))
+  (setq line_minute_properties (subst (cons 50  newtime) (assoc 50  line_minute_properties) line_minute_properties ))
+  (entmod line_minute_properties)
 
   ;; Horas ************
   (setq newtime  ( - (cdr (nth 14 line_hour_properties)) increment_hour  ))
@@ -216,20 +213,20 @@
   (if  (= (+ second 1 ) 60 )
       (progn
         (setq second 0 )  
-        (update_minut)
+        (update_minute)
       )
       (progn
         (setq second  (+ second  1) )
       )
   )
 )
-(defun update_minut ( )
-  (if  (= (+ minut  1 ) 60 )
+(defun update_minute ( )
+  (if  (= (+ minute  1 ) 60 )
       (progn
-        (setq minut 0 )  
+        (setq minute 0 )  
       )
       (progn
-        (setq minut  (+ minut  1) )
+        (setq minute  (+ minute  1) )
       )
   )
 )
