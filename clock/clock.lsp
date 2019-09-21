@@ -27,6 +27,7 @@
     
 
     (setq  center  (getpoint "center point"))
+    (command "_ZOOM" "_C"  center  "4000")
     ;car  => x
     ;cadr => y
 
@@ -42,7 +43,7 @@
     ;Inicializacion de las variables
     ;Cuantas veces y desde cuando
     (setq i 0)
-    (setq times 120)
+    (setq times 20)
 
     ;Cantidad de dias por mes
     (setq days_of_month (list  0 31 28 31 30 31 30 31 31 30 31 30 31))
@@ -280,6 +281,7 @@
   ;Corre el reloj
   (command "_osnap" "_off")
 
+
   (init_var) ;Inicializar variables
   (draw_circles) ;Dibujar circulos
   (init_reference_lines) ;Dibujar lineas de referencias
@@ -290,7 +292,7 @@
   (while (< i times)
      (print "")
      (update_lines)
-     (command  "_.delay" 700 )
+     (command  "_.delay" 1000 )
      (vla-update acd)  
      (setq i (+ i 1)) 
   )   
